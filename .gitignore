@@ -6,6 +6,6 @@ doc
 build.cmd
 licence
 
+.*
 *.key
-__*__
 _*
