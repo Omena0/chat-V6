@@ -39,6 +39,7 @@ class Plugin:
         self.sendMessageAs = None
         self.sendDmAs = None
         self.sendBroadcast = None
+        self.load_plugins = None
         
         # Import & export
         self.export_var = None

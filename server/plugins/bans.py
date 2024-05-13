@@ -3,7 +3,7 @@ from plugins.pluginParser import Plugin, User
 # Plugin info
 name = 'Bans Plugin'
 filename = __file__.split('\\')[-1]
-priority = 1
+priority = 2
 
 # Create plugin object
 plugin: Plugin = Plugin(name, filename)
@@ -19,20 +19,21 @@ banList:set[str] = set()
 
 @plugin.event.onPluginLoad
 def onPluginLoad(event,*_):
-    global helpMsg
     plugin.export_var({"opList":opList})
     plugin.export_var({"muteList":muteList})
     plugin.export_var({"banList":banList})
     
     # Help plugin integration
     helpMsg = plugin.import_var('helpMsg')
+    helpMsg = ''
     helpMsg += """
-    -- Bans Plugin --
-     - Commands -
-     /ban*    - Ban a user
-     /unban*  - Unban a user
-     /mute*   - Mute a user
-     /unmute* - Unmute a user
+-- Bans Plugin --
+- Commands -
+ /ban*    - Ban a user
+ /unban*  - Unban a user
+ /mute*   - Mute a user
+ /unmute* - Unmute a user
+ * - Admin only
     """.strip().replace('\t','')
     plugin.export_var({'helpMsg':helpMsg})
 

@@ -16,8 +16,6 @@ port = 5000
 
 debug = True
 
-banned_users:dict = {}
-
 client_sockets:set[socket.socket] = set()
 
 print('[.] Initializing...')
@@ -88,7 +86,7 @@ def sendDmAs(msg:str, recipient:str|User,user:str|User=None, username='SYSTEM', 
     Raises:
         ValueError: _description_
     """
-    if not findUser(recipient): return
+    if not findUser(recipient): return None
     if user is None and (username is None or name is None):
         username = 'SYSTEM'
         name = 'SYSTEM'
@@ -114,17 +112,21 @@ def export_var(g):
 def import_var(var:str):
     return globals()[var]
 
-def sortPlugins() -> dict[int, ModuleType]:
+def sortPlugins(_plugins) -> dict[int, ModuleType]:
     """Sort plugins into a dict based on priority
 
     Returns:
         dict[int, ModuleType]: Return dict where priority: module
     """
-    return dict(sorted({i.priority: i for i in plugins}.items(), reverse=True))
+    sorted_ = []
+    for plugin in _plugins:
+        sorted_.insert(plugin.priority,plugin)
+    return sorted_
 
 def getPlugins() -> dict[int, ModuleType]: return plugins
 
 def handleEvent(event, *args, **kwargs):
+    global plugins
     for plugin in plugins:
         with suppress(Exception) as e:
             plugin:pluginParser.Plugin = plugin.plugin
@@ -132,51 +134,51 @@ def handleEvent(event, *args, **kwargs):
 
             event_return = pluginParser.EventReturn(plugin)
             callback(event_return,*args,**kwargs)
-            for i in ["cancel","valid","ban","banBypass","joinMsg","newUsername","broadcast","broadcastMessage","msg","username","name","recipient","leaveMsg","startMsg","silent","reason","time"]:
+            for i in ["cancel","valid","joinMsg","newUsername","broadcast","broadcastMessage","msg","username","name","recipient","leaveMsg","startMsg","silent","reason","time"]:
                 if getattr(event_return,i):
                     return event_return
 
 
-def setTopic(new_topic: str):
-    global topic
-    topic = new_topic
-    broadcast(f'Topic changed to: {new_topic}')
 
-print('[!] Loading Plugins...')
-plugins:list[ModuleType] = []
-pluginParser.location = 'plugins'
-for plugin in os.listdir(pluginParser.location):
-    if not plugin.endswith('py'): continue
-    if plugin.startswith('_'): continue
-    if plugin == 'pluginParser.py': continue
-    plugin:ModuleType = pluginParser.loadPlugin(plugin)
-    if plugin is None:
-        print('[!] Plugin failed to load!')
-        continue
-    plugins.append(plugin)
-    # Methods
-    plugin:pluginParser.Plugin = plugin.plugin
-    plugin.sendMessageAs = sendMsgAs
-    plugin.sendDmAs = sendDmAs
-    plugin.sendBroadcast = broadcast
-    
-    # Import & export
-    plugin.export_var = export_var
-    plugin.import_var = import_var
+def load_plugins():
+    global plugins
+    print('[!] Loading Plugins...')
+    plugins = []
+    pluginParser.location = 'plugins'
+    for plugin in os.listdir(pluginParser.location):
+        if not plugin.endswith('py'): continue
+        if plugin.startswith('_'): continue
+        if plugin == 'pluginParser.py': continue
+        plugin:ModuleType = pluginParser.loadPlugin(plugin)
+        if plugin is None:
+            print('[!] Plugin failed to load!')
+            continue
+        plugins.append(plugin)
+        # Methods
+        plugin:pluginParser.Plugin = plugin.plugin
+        plugin.sendMessageAs = sendMsgAs
+        plugin.sendDmAs = sendDmAs
+        plugin.sendBroadcast = broadcast
+        plugin.load_plugins = load_plugins
 
-    # Get-Methods
-    plugin.getUser = findUser
-    plugin.getUsers = getUsers
-    plugin.getIp = getIp
-    plugin.getCS = getCs
-    plugin.getHost = getHost
-    plugin.getPlugins = getPlugins
+        # Import & export
+        plugin.export_var = export_var
+        plugin.import_var = import_var
 
-# Reverse plugins, so that plugins loaded first will maintain priority over ones that come later.
-# Assuming that all plugins have the same priority of course
-plugins = list(reversed(plugins))
+        # Get-Methods
+        plugin.getUser = findUser
+        plugin.getUsers = getUsers
+        plugin.getIp = getIp
+        plugin.getCS = getCs
+        plugin.getHost = getHost
+        plugin.getPlugins = getPlugins
 
-handleEvent('onPluginLoad')
+    # Reverse plugins, so that plugins loaded first will maintain priority over ones that come later.
+    # Assuming that all plugins have the same priority of course
+    plugins = list(reversed(sortPlugins(plugins)))
+    handleEvent('onPluginLoad')
+
+load_plugins()
 
 def csHandler(cs:socket.socket, addr:tuple):
     user = None
@@ -200,10 +202,11 @@ def csHandler(cs:socket.socket, addr:tuple):
                 
                 else:
                     user.token = user.genToken()
+                    user.cs = cs
                         
                     cs.send(user.token.encode())
 
-                    a:pluginParser.EventReturn = handleEvent('onLogin', user, banned_users, msg[2])
+                    a:pluginParser.EventReturn = handleEvent('onLogin', user, [], msg[2])
                     if a and a.cancel:
                         client_sockets.remove(cs)
                         with suppress(Exception): cs.close()
@@ -227,7 +230,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                 cs.send('\tINVALID'.encode())
                 continue
 
-            # Optimization; If request = DONE, dont process any further.
+            # If request = DONE, dont process any further.
             if msg[0] == 'DONE': continue
 
             elif msg[0] == 'SET_USER':

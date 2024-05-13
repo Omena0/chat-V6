@@ -4,7 +4,7 @@ from time import sleep
 # Plugin info
 name = 'Ignore Plugin'
 filename = __file__.split('\\')[-1]
-priority = 10
+priority = 1
 
 # Create plugin object
 plugin: Plugin = Plugin(name, filename)
@@ -15,16 +15,15 @@ blocklist:dict[str,list] = {}
 
 @plugin.event.onPluginLoad
 def onPluginLoad(event,*_):
-    global helpMsg
     # Help plugin integration
     helpMsg = plugin.import_var('helpMsg')
     helpMsg += """
-    -- Ignore Plugin --
-     - Commands -
-     /ignore     - Ignore a user  (t)
-     /block      - Block a user   (t)
-     (t) = Toggle
-    """.strip().replace('\t','')
+
+-- Ignore Plugin --
+- Commands -
+ /ignore     - Ignore a user  (t)
+ /block      - Block a user   (t)
+ (t) = Toggle""".replace('\t','')
     plugin.export_var({'helpMsg':helpMsg})
 
 @plugin.event.beforeMessage
