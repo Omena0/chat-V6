@@ -7,10 +7,10 @@
 
 # Fetches the ip from static api
 # If this is enabled the ip and port bellow will be ignored.
-fetch_ip = True
+fetch_ip = False
 
 # Api address
-api_addr = "https://omena0.github.io/api/chat-v6/ip"
+api_addr = "https://omena0.github.io/api/"
 
 # Custom address for the ChatV6 server
 # Overridden if `fetch_ip` is true.
@@ -20,7 +20,7 @@ port = 5000
 ############## Login configuration ##############
 
 # Whether to send a password during login.
-online_mode = True
+online_mode = False
 
 # Whether to stone the username and password (hash) so you dont have to type it every time
-store_credentials = True
+store_credentials = False

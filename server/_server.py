@@ -47,7 +47,8 @@ def findUser(name) -> User:
 def broadcast(msg:str, username='SYSTEM', name='SYSTEM') -> None:
     print(f'[{name}] <{username}> {msg}')
     for cs in client_sockets:
-        with suppress(Exception): cs.send(f'\t[{name}] <{username}> {msg}'.encode())
+        with suppress(Exception):
+            cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
 
 def sendMsgAs(msg:str,recipient:str|User,user:str|User=None,username:str=None, name:str=None):
     """Sends a chat message that is only seen by the recipient unlike sendDmAs()
@@ -71,7 +72,7 @@ def sendMsgAs(msg:str,recipient:str|User,user:str|User=None,username:str=None, n
     if username is None: username = user.username
     if name is None: name = user.name
     
-    user.cs.send(f'\t[{name}] <{username}> {msg}'.encode())
+    user.cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
 
 def sendDmAs(msg:str, recipient:str|User,user:str|User=None, username='SYSTEM', name='SYSTEM'):
     """Sends a private message to someone.
@@ -95,7 +96,7 @@ def sendDmAs(msg:str, recipient:str|User,user:str|User=None, username='SYSTEM', 
     if username is None: username = user.username
     if name is None: name = user.name
     if not recipient: return
-    recipient.cs.send(f'\tPRIVATE [{name}] <{username}> {msg}'.encode())
+    recipient.cs.send(f'\tDISPLAY|[PRIVATE] [{username}] <{user}> {msg}'.encode())
     print(f'PRIVATE [{name} -> {recipient.name}]: {msg}')
 
 def getIp(user:str): return findUser(user).cs.getpeername()
@@ -185,8 +186,7 @@ def csHandler(cs:socket.socket, addr:tuple):
     while True:
         try:
             msg = cs.recv(2048).decode().split('|')
-            if not msg: raise Exception('Recieved nothing')
-            print(msg)
+            if not msg: raise ValueError('Recieved nothing')
             
             if msg[0] == 'LOGIN':
                 if findUser(msg[1]) is None:
@@ -237,13 +237,13 @@ def csHandler(cs:socket.socket, addr:tuple):
                 a:pluginParser.EventReturn = handleEvent('beforeNick', user.username, msg[3])
                 if a is not None:
                     if a.cancel:
-                        cs.send(f'\t{user.username}'.encode())
+                        cs.send(f'\tDISPLAY_NAME|{user.name}'.encode())
                         continue
-                    cs.send(f'\t{a.newName}'.encode())
+                    cs.send(f'\tDISPLAY_NAME|{a.newName}'.encode())
                     if a.broadcast: broadcast(f'{a.broadcastMessage}', username='!')
                     user.username = a.newName
                 else:
-                    cs.send(f'\t{msg[3]}'.encode())
+                    cs.send(f'\tDISPLAY_NAME|{msg[3]}'.encode())
                     broadcast(f'{user.name} Changed their name. {user.username} -> {msg[3]}', username='!')
                     user.username = msg[3]
                 continue
@@ -251,7 +251,7 @@ def csHandler(cs:socket.socket, addr:tuple):
             elif msg[0] == 'SEND_MESSAGE':
                 if msg[3] == '': continue # Drop empty messages (no point including them)
                 a:pluginParser.EventReturn = handleEvent('beforeMessage', msg[3], user)
-                if a is None:
+                if a is None or a.msg is None:
                     broadcast(msg[3], username=user.username, name=user.name)
                 elif a.cancel: continue
                 else:

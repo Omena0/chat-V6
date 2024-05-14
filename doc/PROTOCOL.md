@@ -56,6 +56,8 @@ Request format
 
 Everything that the client and server can send to eachother
 
+#### Client to server
+
 <details open>
 <summary>LOGIN</summary>
 
@@ -94,4 +96,22 @@ Everything that the client and server can send to eachother
     Send a private (direct) message to a user.
     CLIENT-> name && token && user && msg
     SERVER-> DONE || INVALID
+</details>
+
+#### Server to client
+
+<details open>
+<summary>DISPLAY</summary>
+
+    Request the client to display a message.
+    SERVER-> message
+    CLIENT-> DONE
+</details>
+
+<details open>
+<summary>DISPLAY_NAME</summary>
+
+    Request the client to set the clientside username.
+    SERVER-> name
+    CLIENT-> DONE
 </details>

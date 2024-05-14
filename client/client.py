@@ -6,6 +6,11 @@ import socket
 import os
 import sys
 
+try: os.chdir('client')
+except: ...
+
+os.system('cls')
+
 defaultconfig = """
 # Configuration file for the ChatV6 client
 
@@ -18,7 +23,7 @@ defaultconfig = """
 fetch_ip = True
 
 # Api address
-api_addr = "omena0.github.io/api/chat-v6/ip"
+api_addr = "https://omena0.github.io/api/"
 
 # Custom address for the ChatV6 server
 # Overridden if `fetch_ip` is true.
@@ -47,11 +52,17 @@ def load_config(file='config.txt'):
             if not line: continue
             key,value = line.split('=')
             key,value = key.strip(), value.strip().replace("'",'').replace('"','')
+            if value.lower() == 'true': value = True
+            elif value.lower() == 'false': value = False
+            else:
+                try: value = int(value)
+                except: ...
+
             globals()[key] = value
 
 # Defaults? (in case config doesent have the value)
 fetch_ip = True
-api_addr = "https://omena0.github.io/api/chat-v6/ip"
+api_addr = "https://omena0.github.io/api/"
 ip   = "127.0.0.1"
 port = 5000
 online_mode = True
@@ -60,7 +71,6 @@ store_credentials = True
 # Load
 load_config()
 
-os.system('cls')
 
 try: os.chdir('client')
 except: ...
@@ -74,7 +84,9 @@ def apiGet(path:str) -> str:
     Returns:
         str: string from api
     """
-    return requests.request('get',api_addr+path).text
+    url = api_addr+path
+    if not url.startswith('http'): url = f'https://{url}'
+    return requests.request('get',url).text
 
 # Address from api
 if fetch_ip:
@@ -96,8 +108,11 @@ if store_credentials:
         try: os.mkdir('cache')
         except: pass
         with open('cache/credentials.txt','w') as file: file.write(f'{name}|{psw}')
-    username = name
 
+else:
+    name = input('Username: ')
+    if online_mode: psw = md5(input('Password: ').encode()).hexdigest()
+username = name
 
 # Connect
 print(f'[.] Connecting to {ip}:{port}')
@@ -129,7 +144,6 @@ else:
     token = msg
     print('[!] Logged in!')
 
-to_set = ''
 def handler():
     while True:
         try: msg = s.recv(1024).decode()
@@ -145,59 +159,64 @@ def handlePacket(msg):
     msg = msg.strip()
     if msg == '': return
     if msg == 'DONE': return
-
-    if msg == 'INVALID': # Invalid
+    msg = msg.split('|')
+    
+    if msg[0] == 'INVALID': # Invalid
         print('[!] Invalid Token!')
         print(f'[{name}] <{username}> ',end='')
     
-    elif msg == 'INVALID_PSW': # Invalid password
+    elif msg[0] == 'INVALID_PSW': # Invalid password
         print('[!] Invalid Password!')
         print(f'[{name}] <{username}> ',end='')
 
-    elif msg == 'UNKNOWN_COMMAND': # Invalid command
+    elif msg[0] == 'UNKNOWN_COMMAND': # Invalid command
         print('[!] Unknown Command!')
         print(f'[{name}] <{username}> ',end='')
 
-    elif msg == 'NOT_IMPLEMENTED': # NotImplementedError
+    elif msg[0] == 'NOT_IMPLEMENTED': # NotImplementedError
         print('[!] Feature Not Implemented!')
         print(f'[{name}] <{username}> ',end='')
 
-    elif to_set == 'username':
-        username = msg
-        to_set = ''
-    else:
-        if msg.startswith(f'[{name}] '): print(f'\r\x1b[1A\r',end='')
+    elif msg[0] == 'DISPLAY_NAME':
+        username = msg[1]
+
+    elif msg[0] == 'DISPLAY':
+        if msg[1].startswith(f'[{name}] '): print(f'\r\x1b[1A\r',end='')
         
-        print(f'\r{msg}{" "*50}\n[{name}] <{username}> ',end='')
+        print(f'\r{msg[1]}{" "*50}\n[{name}] <{username}> ',end='')
         
+
+
+print('[!] All done!\n')
+print(f'[SYSTEM] <!> Welcome, {username}!')
 
 Thread(target=handler).start()
-
-print('[!] All done!')
-
-print(f'Welcome, {username}')
 
 while True:
     msg = input(f'')
     if msg == '':
         print(f'[{name}] <{username}> ',end='')
         continue
+
     if msg.startswith('/'): # Command Handling (clientside)
         # Client
         if msg.startswith('/nick'):
             s.send(f'SET_USER|{name}|{token}|{msg.replace("/nick","").strip()}'.encode())
-            to_set = 'username'
-            
+            print(f'[{name}] <{username}> ',end='')
+
         elif msg.startswith('/msg '):
             msg = msg.split(' ')
             s.send(f'SEND_DM|{name}|{token}|{msg[1]}|{' '.join(msg[2:])}'.encode())
-            
+            print(f'[{name}] <{username}> ',end='')
+
         elif msg.startswith('/exit'):
             s.close()
             sys.exit()
+
         # Server
         else:
             s.send(f'SEND_COMMAND|{name}|{token}|{msg}'.encode())
+
     else:
         s.send(f'SEND_MESSAGE|{name}|{token}|{msg}'.encode())
     
