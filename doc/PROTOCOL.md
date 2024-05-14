@@ -2,14 +2,10 @@
 # Protocol
 
 This file contains the specifics of exactly how the client and server communicate.
-<br>
-Yes i know it should be better..
-<br>
-No i wont fix it.
 
 ## Reading
 
-This section regards all the formatting that I've used in this document.
+This section regards all the formating that I've used in this document.
 
 ### Data types
 
@@ -25,8 +21,8 @@ Variable information
 
     Name     - Unique identifier
     Username - Display name
-    Licence  - Block signed with our privateKey, verifiable with publicKey
-    Token    - MD5 hash we use for identification. Created with users name, username and a random number.
+    Password - MD5 hash of password
+    Token    - MD5 hash we use for identification.
 
 ### Errors
 
@@ -35,7 +31,7 @@ Protocol errors
     INVALID         - Invalid token
     UNKNOWN_COMMAND - User tried executing a nonexistent command
     NOT_IMPLEMENTED - Feature is not implemented or enabled
-    DONE            - Sender marks message as recieved, and completed.
+    DONE            - Sender marks operation as completed.
 
 ### Operators
 

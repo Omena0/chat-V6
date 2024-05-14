@@ -36,9 +36,9 @@ class Plugin:
         self.filename = filename
         
         # Methods (set by server)
-        self.sendMessageAs = None
-        self.sendDmAs = None
-        self.sendBroadcast = None
+        self.sendMsg = None
+        self.sendDm = None
+        self.brodcast = None
         self.load_plugins = None
         
         # Import & export

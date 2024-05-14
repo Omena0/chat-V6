@@ -23,4 +23,4 @@ port = 5000
 online_mode = False
 
 # Whether to stone the username and password (hash) so you dont have to type it every time
-store_credentials = False
+store_credentials = True
