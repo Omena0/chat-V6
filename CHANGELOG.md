@@ -1,7 +1,22 @@
 
 # Changes since V1.0.0 B1
 
-## V1.0.2 B3
+## V1.1.1 B4
+
+Plugin api bugfixes
+
+Changes:
+
+- Rename sendBroadcast to broadcast
+- Rename sendMessageAs to sendMsg in plugin api and internally
+- Rename sendDmAs to sendDm
+- Remove already removed event defenitions from being checked
+- Plugin event errors are now logged
+- Changed how direct messages look like
+- Updates to plugins
+- Changes to documentation and other .md files
+
+## V1.1.0 B3
 
 Client & protocol update
 
