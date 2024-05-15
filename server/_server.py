@@ -11,7 +11,7 @@ from contextlib import suppress
 try: os.chdir('server')
 except: ...
 
-ip   = '127.0.0.1'
+ip   = '192.168.36.25'
 port = 5000
 
 debug = True

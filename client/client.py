@@ -93,7 +93,6 @@ if fetch_ip:
     print('[.] Fetching ip from api...')
 
     addr = apiGet('chat-v6/ip').split(':')
-    addr = ('127.0.0.1',5000)
     print(addr)
     ip   = addr[0]
     port = int(addr[1])
