@@ -13,18 +13,12 @@ plugin: Plugin = Plugin(name, filename)
 ignorelist:dict[str,list] = {}
 blocklist:dict[str,list] = {}
 
-@plugin.event.onPluginLoad
-def onPluginLoad(event,*_):
-    # Help plugin integration
-    helpMsg = plugin.import_var('helpMsg')
-    helpMsg += """
-
+helpMsg = """
 -- Ignore Plugin --
-- Commands -
- /ignore     - Ignore a user  (t)
- /block      - Block a user   (t)
- (t) = Toggle""".replace('\t','')
-    plugin.export_var({'helpMsg':helpMsg})
+ - Commands -
+  /ignore     - Ignore a user  (t)
+  /block      - Block a user   (t)
+ (t) = Toggle"""
 
 @plugin.event.beforeMessage
 def beforeMessage(event,msg:str,sender:User):
@@ -42,10 +36,10 @@ def beforeMessage(event,msg:str,sender:User):
 @plugin.event.beforeDm
 def beforeDm(event,sender:User,recipient:User,msg:str):
     if sender.name in ignorelist[recipient]:
-        plugin.sendDmAs(f'{recipient} Has ignored you.',sender)
+        plugin.sendMsg(f'{recipient} Has ignored you.',sender)
         event.cancel = True
     if sender.name in blocklist[recipient]:
-        plugin.sendDmAs(f'{recipient} Has blocked you.',sender)
+        plugin.sendMsg(f'{recipient} Has blocked you.',sender)
         event.cancel = True
 
 
@@ -55,19 +49,23 @@ def beforeCommand(event,user,cmd):
         ignored = cmd.split("/ignore ")[1]
         if ignored not in ignorelist[user]:
             ignorelist[user].append(ignored)
-            plugin.sendDmAs(f'You will no longer see messages from {ignored}.',user)
+            plugin.sendMsg(f'You will no longer see messages from {ignored}.',user)
         else:
             ignorelist[user].remove(ignored)
-            plugin.sendDmAs(f'You will now see messages from {ignored}',user)
+            plugin.sendMsg(f'You will now see messages from {ignored}',user)
             
     if cmd.startswith("/block "):
         blocked = cmd.split("/block ")[1]
         if blocked not in blocklist[user]:
             blocklist[user].append(blocked)
-            plugin.sendDmAs(f'{blocked} Can no longer see your messages.',user)
+            plugin.sendMsg(f'{blocked} Can no longer see your messages.',user)
         else:
             blocklist[user].remove(blocked)
-            plugin.sendDmAs(f'{blocked} Can now see your messages again.',user)
+            plugin.sendMsg(f'{blocked} Can now see your messages again.',user)
+        
+    if cmd == '/help':
+        for line in helpMsg.splitlines(): plugin.sendDm(line,user)
+
 
 @plugin.event.onJoin
 def onJoin(event,user):

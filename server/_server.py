@@ -11,7 +11,7 @@ from contextlib import suppress
 try: os.chdir('server')
 except: ...
 
-ip   = '127.0.0.1'
+ip   = '192.168.36.25'
 port = 5000
 
 debug = True
@@ -47,10 +47,11 @@ def findUser(name) -> User:
 def broadcast(msg:str, username='SYSTEM', name='SYSTEM') -> None:
     print(f'[{name}] <{username}> {msg}')
     for cs in client_sockets:
-        with suppress(Exception): cs.send(f'\t[{name}] <{username}> {msg}'.encode())
+        with suppress(Exception):
+            cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
 
-def sendMsgAs(msg:str,recipient:str|User,user:str|User=None,username:str=None, name:str=None):
-    """Sends a chat message that is only seen by the recipient unlike sendDmAs()
+def sendMsg(msg:str,recipient:str|User, user:str|User=None,username:str=None, name:str=None):
+    """Sends a chat message that is only seen by the recipient unlike sendMsg()
 
     Args:
         msg (str): _description_
@@ -71,9 +72,9 @@ def sendMsgAs(msg:str,recipient:str|User,user:str|User=None,username:str=None, n
     if username is None: username = user.username
     if name is None: name = user.name
     
-    user.cs.send(f'\t[{name}] <{username}> {msg}'.encode())
+    user.cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
 
-def sendDmAs(msg:str, recipient:str|User,user:str|User=None, username='SYSTEM', name='SYSTEM'):
+def sendDm(msg:str, recipient:str|User, user:str|User=None, username=None, name=None):
     """Sends a private message to someone.
 
     Args:
@@ -95,7 +96,7 @@ def sendDmAs(msg:str, recipient:str|User,user:str|User=None, username='SYSTEM', 
     if username is None: username = user.username
     if name is None: name = user.name
     if not recipient: return
-    recipient.cs.send(f'\tPRIVATE [{name}] <{username}> {msg}'.encode())
+    recipient.cs.send(f'\tDISPLAY|[PRIVATE] <{name}> {msg}'.encode())
     print(f'PRIVATE [{name} -> {recipient.name}]: {msg}')
 
 def getIp(user:str): return findUser(user).cs.getpeername()
@@ -128,15 +129,17 @@ def getPlugins() -> dict[int, ModuleType]: return plugins
 def handleEvent(event, *args, **kwargs):
     global plugins
     for plugin in plugins:
-        with suppress(Exception) as e:
+        try:
             plugin:pluginParser.Plugin = plugin.plugin
             callback = getattr(plugin.event,event,None)
 
             event_return = pluginParser.EventReturn(plugin)
             callback(event_return,*args,**kwargs)
-            for i in ["cancel","valid","joinMsg","newUsername","broadcast","broadcastMessage","msg","username","name","recipient","leaveMsg","startMsg","silent","reason","time"]:
+            for i in ["cancel","valid","joinMsg","newUsername","broadcast","broadcastMessage","msg","username","name","recipient","leaveMsg","startMsg","silent"]:
                 if getattr(event_return,i):
                     return event_return
+        except Exception as e:
+            print(f'[!] {plugin.name} failed {event} [{e}]')
 
 
 
@@ -156,9 +159,9 @@ def load_plugins():
         plugins.append(plugin)
         # Methods
         plugin:pluginParser.Plugin = plugin.plugin
-        plugin.sendMessageAs = sendMsgAs
-        plugin.sendDmAs = sendDmAs
-        plugin.sendBroadcast = broadcast
+        plugin.broadcast = broadcast
+        plugin.sendMsg = sendMsg
+        plugin.sendDm = sendDm
         plugin.load_plugins = load_plugins
 
         # Import & export
@@ -180,13 +183,12 @@ def load_plugins():
 
 load_plugins()
 
-def csHandler(cs:socket.socket, addr:tuple):
+def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
     user = None
     while True:
         try:
             msg = cs.recv(2048).decode().split('|')
-            if not msg: raise Exception('Recieved nothing')
-            print(msg)
+            if not msg: raise ValueError('Recieved nothing')
             
             if msg[0] == 'LOGIN':
                 if findUser(msg[1]) is None:
@@ -206,7 +208,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                         
                     cs.send(user.token.encode())
 
-                    a:pluginParser.EventReturn = handleEvent('onLogin', user, [], msg[2])
+                    a:pluginParser.EventReturn = handleEvent('onLogin', user, msg[2])
                     if a and a.cancel:
                         client_sockets.remove(cs)
                         with suppress(Exception): cs.close()
@@ -237,13 +239,13 @@ def csHandler(cs:socket.socket, addr:tuple):
                 a:pluginParser.EventReturn = handleEvent('beforeNick', user.username, msg[3])
                 if a is not None:
                     if a.cancel:
-                        cs.send(f'\t{user.username}'.encode())
+                        cs.send(f'\tDISPLAY_NAME|{user.name}'.encode())
                         continue
-                    cs.send(f'\t{a.newName}'.encode())
+                    cs.send(f'\tDISPLAY_NAME|{a.newName}'.encode())
                     if a.broadcast: broadcast(f'{a.broadcastMessage}', username='!')
                     user.username = a.newName
                 else:
-                    cs.send(f'\t{msg[3]}'.encode())
+                    cs.send(f'\tDISPLAY_NAME|{msg[3]}'.encode())
                     broadcast(f'{user.name} Changed their name. {user.username} -> {msg[3]}', username='!')
                     user.username = msg[3]
                 continue
@@ -251,7 +253,7 @@ def csHandler(cs:socket.socket, addr:tuple):
             elif msg[0] == 'SEND_MESSAGE':
                 if msg[3] == '': continue # Drop empty messages (no point including them)
                 a:pluginParser.EventReturn = handleEvent('beforeMessage', msg[3], user)
-                if a is None:
+                if a is None or a.msg is None:
                     broadcast(msg[3], username=user.username, name=user.name)
                 elif a.cancel: continue
                 else:
@@ -263,14 +265,14 @@ def csHandler(cs:socket.socket, addr:tuple):
 
             elif msg[0] == 'SEND_DM':
                 if not findUser(msg[3]):
-                    sendDmAs(f'User does not exist. [{msg[3]}]',user)
+                    sendDm(f'User does not exist. [{msg[3]}]',user)
                     continue
                 a:pluginParser.EventReturn = handleEvent('beforeDm', user, findUser(msg[3]), msg[4])
                 if a is None:
-                    sendDmAs(msg[4], msg[3], username=user.username, name=user.name)
+                    sendDm(msg[4], msg[3], username=user.username, name=user.name)
                 elif a.cancel == True: continue
                 else:
-                    sendDmAs(a.msg, a.recipient, username=a.username, name=a.name)
+                    sendDm(a.msg, a.recipient, username=a.username, name=a.name)
         except Exception as e:
             if debug:
                 print(e)

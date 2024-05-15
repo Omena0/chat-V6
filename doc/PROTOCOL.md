@@ -2,14 +2,10 @@
 # Protocol
 
 This file contains the specifics of exactly how the client and server communicate.
-<br>
-Yes i know it should be better..
-<br>
-No i wont fix it.
 
 ## Reading
 
-This section regards all the formatting that I've used in this document.
+This section regards all the formating that I've used in this document.
 
 ### Data types
 
@@ -25,8 +21,8 @@ Variable information
 
     Name     - Unique identifier
     Username - Display name
-    Licence  - Block signed with our privateKey, verifiable with publicKey
-    Token    - MD5 hash we use for identification. Created with users name, username and a random number.
+    Password - MD5 hash of password
+    Token    - MD5 hash we use for identification.
 
 ### Errors
 
@@ -35,7 +31,7 @@ Protocol errors
     INVALID         - Invalid token
     UNKNOWN_COMMAND - User tried executing a nonexistent command
     NOT_IMPLEMENTED - Feature is not implemented or enabled
-    DONE            - Sender marks message as recieved, and completed.
+    DONE            - Sender marks operation as completed.
 
 ### Operators
 
@@ -55,6 +51,8 @@ Request format
 ### Requests
 
 Everything that the client and server can send to eachother
+
+#### Client to server
 
 <details open>
 <summary>LOGIN</summary>
@@ -94,4 +92,22 @@ Everything that the client and server can send to eachother
     Send a private (direct) message to a user.
     CLIENT-> name && token && user && msg
     SERVER-> DONE || INVALID
+</details>
+
+#### Server to client
+
+<details open>
+<summary>DISPLAY</summary>
+
+    Request the client to display a message.
+    SERVER-> message
+    CLIENT-> DONE
+</details>
+
+<details open>
+<summary>DISPLAY_NAME</summary>
+
+    Request the client to set the clientside username.
+    SERVER-> name
+    CLIENT-> DONE
 </details>

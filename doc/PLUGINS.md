@@ -1,34 +1,36 @@
 
 # Plugins
 
-This markdown file should provide you with enought information to make your first plugin! I suggest you skim all the docs and go read [The Tutorial](#plugin-tutorial) first and read all the links as they are mentioned.
+This markdown file should provide you with enough information to make your first plugin! I suggest you skim all the docs and go read [The Tutorial](#plugin-tutorial) first and read all the links as they are mentioned.
 
-Reading the [Protocol Docs](PROTOCOL.md#protocol) and source code might help the curious understand how all of this is implemented.
+Reading the [Protocol Docs](PROTOCOL.md#protocol) and source code might help understand how all of this is implemented.
 
 ## The Plugin Object
 
 ### Methods
 
-Theese arent defined untill the `onPluginLoad` event has been called.
+Theese arent defined before the `onPluginLoad` event has been called.
 <br><u>**ONLY** USE THEM AFTER the `onPluginLoad` event!</u>
 
-##### Sry for the bad docs btw, i cant document all of them XD
+View source for docstrings
 
 <details open>
 <summary>Click to contract</summary>
 
-    sendMessage
-    sendBroadcast
+    broadcast  - sendMsg but sends to all
+    sendMsg    - send a `DISPLAY` request to client & format as message
+    sendDm     - same as sendMsg but format as private
 
-    export_var
-    import_var
+    --- Might not work as expected --- (load order & priority sensitive)
+    export_var - Export a dict containing variables
+    import_var - Get the value of a variable
 
-    getUser
-    getUsers
-    getIp
-    getCS
-    getHost
-    getPlugins
+    getUser    - Get User object from name
+    getUsers   - Get all users
+    getIp      - Get ip from username
+    getCS      - Get cs from username
+    getHost    - Get ip & port the server's running on
+    getPlugins - Get all loaded plugins
 </details>
 
 ---
@@ -109,7 +111,7 @@ Then we need to set up basic information about the plugin
 ```python
 # Plugin info
 name = 'Test Plugin 1'
-filename = __file__.split('\\')[-1] # BOILERPLATE; DO NOT CHANGE
+filename = __file__.split('\\')[-1]
 priority = 1
 ```
 
@@ -140,6 +142,6 @@ def onPluginLoad(*_): # Ignore args
 ```
 
 Here we define 2 events, `onServerStart`, and `onPluginLoad`.
-The `onServerStart` function can be used to modify the start text and thats exactly what we are doing.
+The `onServerStart` function can be used to modify the start text and that's exactly what we're doing.
 
 The `onPluginLoad` event doesent recieve any arguments nor return anything. It is used to signal when the server is done loading the plugin and we can use the newly recieved functions to interface with the server. [[Methods]](#methods)
