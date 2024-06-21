@@ -21,5 +21,5 @@ port = 5000
 # Whether to send a password during login.
 online_mode = True
 
-# Whether to stone the username and password (hash) so you dont have to type it every time
+# Whether to stone the display_name and password (hash) so you dont have to type it every time
 store_credentials = True

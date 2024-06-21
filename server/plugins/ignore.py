@@ -1,5 +1,4 @@
 from plugins.pluginParser import Plugin, User
-from time import sleep
 
 # Plugin info
 name = 'Ignore Plugin'
@@ -23,14 +22,13 @@ helpMsg = """
 @plugin.event.beforeMessage
 def beforeMessage(event,msg:str,sender:User):
     event.cancel = True
-    print(f'[{sender.name}] <{sender.username}> {msg}')
     for user in plugin.getUsers():
         
         if sender.name in ignorelist[user]:
             msg = '[You have ignored this user]'
         if user.name in blocklist[sender]:
             msg = '[This user has blocked you]'
-        plugin.sendMessageAs(msg,recipient=user,user=sender)
+        plugin.sendMsg(msg,recipient=user,user=sender)
 
 
 @plugin.event.beforeDm

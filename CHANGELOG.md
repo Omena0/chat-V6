@@ -23,7 +23,7 @@ Client & protocol update
 Changes:
 
 - Protocol now supports server -> client requests
-- Added new `DISPLAY` and `DISLPLAY_NAME` packets.
+- Added new `DISPLAY` and `DISLPLAY_display_name` packets.
 - Fixed client not running in /client directory when debugging
 - Fixed default config being invalid
 - Fixed apiGet function not working without http scheme

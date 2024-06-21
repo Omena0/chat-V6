@@ -19,14 +19,14 @@ The types of data used in this document
 
 Variable information
 
-    Name     - Unique identifier
-    Username - Display name
+    display_name     - Display name
+    name - Unique identifier
     Password - MD5 hash of password
     Token    - MD5 hash we use for identification.
 
 ### Errors
 
-Protocol errors
+Protocol responses
 
     INVALID         - Invalid token
     UNKNOWN_COMMAND - User tried executing a nonexistent command
@@ -44,7 +44,7 @@ Logical operators used in this document
 
 Request format
 
-    <REQUEST_NAME>
+    <REQUEST_display_name>
       <DESCRIPTION>
       <CONVERSATION>
   
@@ -52,29 +52,29 @@ Request format
 
 Everything that the client and server can send to eachother
 
-#### Client to server
+#### Client -> server
 
 <details open>
 <summary>LOGIN</summary>
 
     Exchange valid user details for token.
-    CLIENT-> name && hashed psw
+    CLIENT-> display_name && hashed psw
     SERVER-> token || INVALID
 </details>
 
 <details open>
 <summary>SET_USER</summary>
 
-    Request server to change our display name.
-    CLIENT-> name && token && newUsername
-    SERVER-> newUsername || INVALID
+    Request server to change our display display_name.
+    CLIENT-> display_name && token && newname
+    SERVER-> newname || INVALID
 </details>
 
 <details open>  
 <summary>SEND_MESSAGE</summary>
 
     Request server to deliver our message.
-    CLIENT-> name && token && message
+    CLIENT-> display_name && token && message
     SERVER-> DONE || INVALID
 </details>
 
@@ -82,7 +82,7 @@ Everything that the client and server can send to eachother
 <summary>SEND_COMMAND</summary>
 
     Request server to execute a / command.
-    CLIENT-> name && token && command
+    CLIENT-> display_name && token && command
     SERVER-> commandResponse || UNKNOWN_COMMAND || INVALID
 </details>
 
@@ -90,24 +90,40 @@ Everything that the client and server can send to eachother
 <summary>SEND_DM</summary>
 
     Send a private (direct) message to a user.
-    CLIENT-> name && token && user && msg
+    CLIENT-> display_name && token && user && msg
     SERVER-> DONE || INVALID
 </details>
 
-#### Server to client
+#### Server -> client
 
 <details open>
 <summary>DISPLAY</summary>
 
-    Request the client to display a message.
+    Request the client to display text.
     SERVER-> message
     CLIENT-> DONE
 </details>
 
 <details open>
-<summary>DISPLAY_NAME</summary>
+<summary>SET_display_name</summary>
 
-    Request the client to set the clientside username.
-    SERVER-> name
+    Request the client to set the client display_name.
+    SERVER-> display_name
+    CLIENT-> DONE
+</details>
+
+<details open>
+<summary>MESSAGE</summary>
+
+    Send a message to the client
+    SERVER-> display_name && name && message
+    CLIENT-> DONE
+</details>
+
+<details open>
+<summary>DM</summary>
+
+    Request the client to set the client display_name.
+    SERVER-> display_name
     CLIENT-> DONE
 </details>

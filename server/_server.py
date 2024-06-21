@@ -11,7 +11,7 @@ from contextlib import suppress
 try: os.chdir('server')
 except: ...
 
-ip   = '192.168.36.25'
+ip   = '127.0.0.1'
 port = 5000
 
 debug = True
@@ -21,16 +21,16 @@ client_sockets:set[socket.socket] = set()
 print('[.] Initializing...')
 
 class User:
-    def __init__(self, name, psw, cs):
-        self.name:str         = name         # Unique Identifier
-        self.username:str     = self.name    # Customisable display name
+    def __init__(self, display_name, psw, cs):
+        self.name:str         = display_name         # Unique Identifier
+        self.display_name:str     = self.name    # Customisable display display_name
         self.password:str     = psw          # Hashed password
         self.token:str        = self.genToken()
         self.cs:socket.socket = cs
         users.add(self)
 
     def genToken(self):
-        return md5(f'{self.name}|{self.username}|{randrange(-32767,32767)}'.encode()).hexdigest()
+        return md5(f'{self.name}|{self.display_name}|{randrange(-32767,32767)}'.encode()).hexdigest()
 
     def __str__(self) -> str:
         return self.name
@@ -40,66 +40,66 @@ class User:
     
 users:set[User] = set()
 
-def findUser(name) -> User:
-    if isinstance(name,User): return name in users
-    with suppress(IndexError): return [user for user in users if user.name == name][0]
+def findUser(display_name) -> User:
+    if isinstance(display_name,User): return display_name in users
+    with suppress(IndexError): return [user for user in users if user.name == display_name][0]
 
-def broadcast(msg:str, username='SYSTEM', name='SYSTEM') -> None:
-    print(f'[{name}] <{username}> {msg}')
+def broadcast(msg:str, name='SYSTEM', display_name='SYSTEM') -> None:
+    print(f'[{display_name}] <{name}> {msg}')
     for cs in client_sockets:
         with suppress(Exception):
-            cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
+            cs.send(f'\tDISPLAY|[{display_name}] <{name}> {msg}'.encode())
 
-def sendMsg(msg:str,recipient:str|User, user:str|User=None,username:str=None, name:str=None):
+def sendMsg(msg:str,recipient:str|User, user:str|User=None,name:str=None, display_name:str=None):
     """Sends a chat message that is only seen by the recipient unlike sendMsg()
 
     Args:
         msg (str): _description_
         recipient (str | User): _description_
         user (str | User, optional): _description_. Defaults to None.
-        username (str, optional): _description_. Defaults to None.
         name (str, optional): _description_. Defaults to None.
+        display_name (str, optional): _description_. Defaults to None.
 
     Raises:
         ValueError: _description_
     """
     if not findUser(recipient): return
-    if user is None and (username is None or name is None):
-        username = 'SYSTEM'
+    if user is None and (name is None or display_name is None):
         name = 'SYSTEM'
+        display_name = 'SYSTEM'
     if isinstance(user,str): user = findUser(user)
     if isinstance(recipient,str): recipient = findUser(recipient)
-    if username is None: username = user.username
-    if name is None: name = user.name
+    if name is None: name = user.display_name
+    if display_name is None: display_name = user.name
     
-    user.cs.send(f'\tDISPLAY|[{name}] <{username}> {msg}'.encode())
+    user.cs.send(f'\tDISPLAY|[{display_name}] <{name}> {msg}'.encode())
 
-def sendDm(msg:str, recipient:str|User, user:str|User=None, username=None, name=None):
+def sendDm(msg:str, recipient:str|User, user:str|User=None, name=None, display_name=None):
     """Sends a private message to someone.
 
     Args:
         msg (str): Message to send.
         recipient (str | User): The recipient of the DM.
         user (str | User, optional): The user to send as. Defaults to System.
-        username (str, optional): The username to send as. Defaults to 'SYSTEM'.
         name (str, optional): The name to send as. Defaults to 'SYSTEM'.
+        display_name (str, optional): The display_name to send as. Defaults to 'SYSTEM'.
 
     Raises:
         ValueError: _description_
     """
     if not findUser(recipient): return None
-    if user is None and (username is None or name is None):
-        username = 'SYSTEM'
+    if user is None and (name is None or display_name is None):
         name = 'SYSTEM'
+        display_name = 'SYSTEM'
     if isinstance(user, str): user = findUser(user)
     if isinstance(recipient,str): recipient = findUser(recipient)
-    if username is None: username = user.username
-    if name is None: name = user.name
+    if name is None: name = user.display_name
+    if display_name is None: display_name = user.name
     if not recipient: return
-    recipient.cs.send(f'\tDISPLAY|[PRIVATE] <{name}> {msg}'.encode())
-    print(f'PRIVATE [{name} -> {recipient.name}]: {msg}')
+    recipient.cs.send(f'\tDISPLAY|[PRIVATE] <{display_name}> {msg}'.encode())
+    print(f'PRIVATE [{display_name} -> {recipient.name}]: {msg}')
 
-def getIp(user:str): return findUser(user).cs.getpeername()
+def getIp(user:str): return findUser(user).cs.getpeerdisplay_name()
 
 def getCs(user:str): return findUser(user).cs
 
@@ -135,7 +135,7 @@ def handleEvent(event, *args, **kwargs):
 
             event_return = pluginParser.EventReturn(plugin)
             callback(event_return,*args,**kwargs)
-            for i in ["cancel","valid","joinMsg","newUsername","broadcast","broadcastMessage","msg","username","name","recipient","leaveMsg","startMsg","silent"]:
+            for i in ["cancel","valid","joinMsg","newname","broadcast","broadcastMessage","msg","name","display_name","recipient","leaveMsg","startMsg","silent"]:
                 if getattr(event_return,i):
                     return event_return
         except Exception as e:
@@ -220,9 +220,9 @@ def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
                         with suppress(Exception): cs.close()
                         return
                     if a is None:
-                        broadcast(f'{user.name} Logged in.', username='+')
+                        broadcast(f'{user.name} Logged in.', name='+')
                     elif not a.silent:
-                        broadcast(a.joinMsg,username='+')
+                        broadcast(a.joinMsg,name='+')
                 continue
 
             user = findUser(msg[1])
@@ -236,28 +236,28 @@ def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
             if msg[0] == 'DONE': continue
 
             elif msg[0] == 'SET_USER':
-                a:pluginParser.EventReturn = handleEvent('beforeNick', user.username, msg[3])
+                a:pluginParser.EventReturn = handleEvent('beforeNick', user.display_name, msg[3])
                 if a is not None:
                     if a.cancel:
-                        cs.send(f'\tDISPLAY_NAME|{user.name}'.encode())
+                        cs.send(f'\tSET_NAME|{user.name}'.encode())
                         continue
-                    cs.send(f'\tDISPLAY_NAME|{a.newName}'.encode())
-                    if a.broadcast: broadcast(f'{a.broadcastMessage}', username='!')
-                    user.username = a.newName
+                    cs.send(f'\tSET_NAME|{a.newdisplay_name}'.encode())
+                    if a.broadcast: broadcast(f'{a.broadcastMessage}', name='!')
+                    user.display_name = a.newdisplay_name
                 else:
-                    cs.send(f'\tDISPLAY_NAME|{msg[3]}'.encode())
-                    broadcast(f'{user.name} Changed their name. {user.username} -> {msg[3]}', username='!')
-                    user.username = msg[3]
+                    cs.send(f'\tSET_NAME|{msg[3]}'.encode())
+                    broadcast(f'{user.name} Changed their display name. {user.display_name} -> {msg[3]}', name='!')
+                    user.display_name = msg[3]
                 continue
 
             elif msg[0] == 'SEND_MESSAGE':
-                if msg[3] == '': continue # Drop empty messages (no point including them)
+                if msg[3] == '': continue # Drop empty messages
                 a:pluginParser.EventReturn = handleEvent('beforeMessage', msg[3], user)
                 if a is None or a.msg is None:
-                    broadcast(msg[3], username=user.username, name=user.name)
+                    broadcast(msg[3], name=user.display_name, display_name=user.name)
                 elif a.cancel: continue
                 else:
-                    broadcast(a.msg, username=a.username, name=a.name)
+                    broadcast(a.msg, name=a.display_name, display_name=a.name)
                 continue
 
             elif msg[0] == 'SEND_COMMAND':
@@ -269,10 +269,10 @@ def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
                     continue
                 a:pluginParser.EventReturn = handleEvent('beforeDm', user, findUser(msg[3]), msg[4])
                 if a is None:
-                    sendDm(msg[4], msg[3], username=user.username, name=user.name)
+                    sendDm(msg[4], msg[3], name=user.display_name, display_name=user.name)
                 elif a.cancel == True: continue
                 else:
-                    sendDm(a.msg, a.recipient, username=a.username, name=a.name)
+                    sendDm(a.msg, a.recipient, name=a.name, display_name=a.display_name)
         except Exception as e:
             if debug:
                 print(e)
@@ -282,9 +282,9 @@ def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
             try:
                 a:pluginParser.EventReturn = handleEvent('onLeave', user)
                 if a is None and user is not None:
-                    broadcast(f'[{user.name}] {user.username} Left. [{str(e).split("]")[0].replace("[","")}]', username='-')
+                    broadcast(f'[{user.display_name}] {user.name} Left. [{str(e).split("]")[0].replace("[","")}]', name='-')
                 elif a is not None and not a.silent:
-                    broadcast(a.leaveMsg, username='-')
+                    broadcast(a.leaveMsg, name='-')
                 return
             except Exception as e:
                 if debug: raise e

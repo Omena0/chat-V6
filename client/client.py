@@ -35,7 +35,7 @@ port = 5000
 # Whether to send a password during login.
 online_mode = True
 
-# Whether to stone the username and password (hash) so you dont have to type it every time
+# Whether to stone the display_name and password (hash) so you dont have to type it every time
 store_credentials = True
 """.strip()
 
@@ -98,20 +98,20 @@ if fetch_ip:
     port = int(addr[1])
 
 if store_credentials:
-    # Read cached username, or ask user for one and cache that
+    # Read cached display_name, or ask user for one and cache that
     try:
         name,psw = pathlib.Path('cache/credentials.txt').read_text().split('|')
     except Exception:
-        name = input('Username: ')
+        name = input('display_name: ')
         psw = md5(input('Password: ').encode()).hexdigest()
         try: os.mkdir('cache')
         except: pass
         with open('cache/credentials.txt','w') as file: file.write(f'{name}|{psw}')
 
 else:
-    name = input('Username: ')
+    name = input('display_name: ')
     if online_mode: psw = md5(input('Password: ').encode()).hexdigest()
-username = name
+display_name = name
 
 # Connect
 print(f'[.] Connecting to {ip}:{port}')
@@ -154,7 +154,7 @@ def handler():
             handlePacket(i)
 
 def handlePacket(msg):
-    global username, to_set
+    global display_name, to_set
     msg = msg.strip()
     if msg == '': return
     if msg == 'DONE': return
@@ -162,53 +162,54 @@ def handlePacket(msg):
     
     if msg[0] == 'INVALID': # Invalid
         print('[!] Invalid Token!')
-        print(f'[{name}] <{username}> ',end='')
+        print(f'[{name}] <{display_name}> ',end='')
     
     elif msg[0] == 'INVALID_PSW': # Invalid password
         print('[!] Invalid Password!')
-        print(f'[{name}] <{username}> ',end='')
+        print(f'[{name}] <{display_name}> ',end='')
 
     elif msg[0] == 'UNKNOWN_COMMAND': # Invalid command
         print('[!] Unknown Command!')
-        print(f'[{name}] <{username}> ',end='')
+        print(f'[{name}] <{display_name}> ',end='')
 
     elif msg[0] == 'NOT_IMPLEMENTED': # NotImplementedError
         print('[!] Feature Not Implemented!')
-        print(f'[{name}] <{username}> ',end='')
+        print(f'[{name}] <{display_name}> ',end='')
 
-    elif msg[0] == 'DISPLAY_NAME':
-        username = msg[1]
+    elif msg[0] == 'SET_NAME':
+        display_name = msg[1]
 
     elif msg[0] == 'DISPLAY':
         if msg[1].startswith(f'[{name}] '): print(f'\r\x1b[1A\r',end='')
         
-        print(f'\r{msg[1]}{" "*50}\n[{name}] <{username}> ',end='')
+        print(f'\r{msg[1]}{" "*50}\n[{name}] <{display_name}> ',end='')
         
 
 
 print('[!] All done!\n')
-print(f'[SYSTEM] <!> Welcome, {username}!')
+print(f'[SYSTEM] <!> Welcome, {display_name}!')
 
 Thread(target=handler).start()
 
 while True:
     msg = input(f'')
     if msg == '':
-        print(f'[{name}] <{username}> ',end='')
+        print(f'[{name}] <{display_name}> ',end='')
         continue
 
     if msg.startswith('/'): # Command Handling (clientside)
         # Client
         if msg.startswith('/nick'):
             s.send(f'SET_USER|{name}|{token}|{msg.replace("/nick","").strip()}'.encode())
-            print(f'[{name}] <{username}> ',end='')
+            print(f'[{name}] <{display_name}> ',end='')
 
         elif msg.startswith('/msg '):
             msg = msg.split(' ')
             s.send(f'SEND_DM|{name}|{token}|{msg[1]}|{' '.join(msg[2:])}'.encode())
-            print(f'[{name}] <{username}> ',end='')
+            print(f'[{name}] <{display_name}> ',end='')
 
         elif msg.startswith('/exit'):
+            s.send('QUIT'.encode())
             s.close()
             sys.exit()
 

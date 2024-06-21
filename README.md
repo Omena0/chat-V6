@@ -4,12 +4,12 @@
 
 ## Usage
 
-Run the client and enter your username & password in the prompt.
+Run the client and enter your display_name & password in the prompt.
 
 There are 2 (default) commands:
 
 ```syntax
-/nick <name>       - Set your nickname
+/nick <display_name>       - Set your nickdisplay_name
 /msg  <user> <msg> - Send a private message
 ```
 
@@ -37,9 +37,9 @@ ngrok tcp 5000
 
 If you dont want to constantly tell people what your server ip is, set up a static api on github pages:
 
-- Make a repository called \<yourusername\>.github.io and create a folder in it called "api"
+- Make a repository called \<yourdisplay_name\>.github.io and create a folder in it called "api"
 - Then make a folder inside that folder called "chat-v6"
-- Then create a file named "ip.html" in the chat-v6 folder
+- Then create a file display_named "ip.html" in the chat-v6 folder
 - Inside the file put your ngrok ip address
 - Set up github pages
 
@@ -54,7 +54,7 @@ into
 
 ```py
 # Api address
-api_addr = "https://<yourusername>.github.io/api/"
+api_addr = "https://<yourdisplay_name>.github.io/api/"
 ```
 
 inside the client config.txt file.

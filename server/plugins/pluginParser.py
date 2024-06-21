@@ -12,15 +12,15 @@ except: ...
 
 # Had to do this shit for type hints
 class User:
-    def __init__(self, name, psw, cs):
-        self.name:str         = name         # Unique Identifier
-        self.username:str     = self.name    # Customisable display name
+    def __init__(self, display_name, psw, cs):
+        self.name:str         = display_name         # Unique Identifier
+        self.display_name:str     = self.name    # Customisable display display_name
         self.password:str     = psw          # Hashed password
         self.token:str        = self.genToken()
         self.cs:socket.socket = cs
 
     def genToken(self):
-        return md5(f'{self.name}|{self.username}|{randrange(-32767,32767)}'.encode()).hexdigest()
+        return md5(f'{self.name}|{self.display_name}|{randrange(-32767,32767)}'.encode()).hexdigest()
 
     def __str__(self) -> str:
         return self.name
@@ -31,8 +31,8 @@ class User:
 class Dummy:...
 
 class Plugin:
-    def __init__(self,name,filename):
-        self.name = name
+    def __init__(self,display_name,filename):
+        self.name = display_name
         self.filename = filename
         
         # Methods (set by server)
@@ -67,12 +67,12 @@ class EventReturn:
             cancel:bool          = False,
             valid:bool           = False,
             joinMsg:str          = None,
-            newUsername:str      = None,
+            newname:str      = None,
             broadcast:str        = None,
             broadcastMessage:str = None,
             msg:str              = None,
-            username:str         = None,
-            name:str             = None,
+            name:str         = None,
+            display_name:str             = None,
             recipient:str        = None,
             leaveMsg:str         = None,
             startMsg:str         = None,
@@ -85,12 +85,12 @@ class EventReturn:
         self.cancel:bool          = cancel
         self.valid:bool           = valid
         self.joinMsg:str          = joinMsg
-        self.newUsername:str      = newUsername
+        self.newname:str          = newname
         self.broadcast:str        = broadcast
         self.broadcastMessage:str = broadcastMessage
         self.msg:str              = msg
-        self.username:str         = username
-        self.name:str             = name
+        self.display_name:str     = name
+        self.name:str             = display_name
         self.recipient:str        = recipient
         self.leaveMsg:str         = leaveMsg
         self.startMsg:str         = startMsg
@@ -102,7 +102,7 @@ class Event:
         """BeforeMessageEvent
         
         Params: msg:str, user:User
-        Return: cancel:bool, msg:str, username:str, name:str
+        Return: cancel:bool, msg:str, name:str, display_name:str
         """
         if not args:
             self.beforeMessage = func
@@ -110,15 +110,15 @@ class Event:
         """BeforeDmEvent
         
         Params: sender:User, recipient:User, msg:str
-        Return: cancel:bool, recipient:str|User, msg:str, username:str, name:str
+        Return: cancel:bool, recipient:str|User, msg:str, name:str, display_name:str
         """
         if not args:
             self.beforeDm = func
     def beforeNick(self,func,*args,**__):
         """BeforeNickEvent
         
-        Params: oldName, newName
-        Return: cancel, newName, broadcastMsg
+        Params: olddisplay_name, newdisplay_name
+        Return: cancel, newdisplay_name, broadcastMsg
         """
         if not args:
             self.beforeNick = func
@@ -183,7 +183,7 @@ def loadPlugin(name) -> ModuleType:
         
         print(f'[.] Loaded plugin "{plugin.name}"')
         return plugin
-            
+
     except Exception as e:
         print(f'[!] [{name}] Failed to load plugin. {f'[{e}]'.replace('module','plugin') if debug else ''}')
         if debug: raise e

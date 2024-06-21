@@ -27,8 +27,8 @@ View source for docstrings
 
     getUser    - Get User object from name
     getUsers   - Get all users
-    getIp      - Get ip from username
-    getCS      - Get cs from username
+    getIp      - Get ip from name
+    getCS      - Get cs from name
     getHost    - Get ip & port the server's running on
     getPlugins - Get all loaded plugins
 </details>
@@ -84,11 +84,11 @@ The `eventReturn` object contains data returned from events.
     cancel
     valid
     joinMsg
-    newUsername
+    newname
     broadcast
     broadcastMessage
     msg
-    username
+    name
     name
     recipient
     leaveMsg

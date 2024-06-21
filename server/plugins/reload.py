@@ -17,8 +17,8 @@ helpMsg = """
 @plugin.event.beforeCommand
 def beforeCommand(event,user,cmd):
     if cmd == '/reload':
-        plugin.load_plugins()
-        plugin.sendDm('Reloading!',user)
+        ...
+        # TODO
         
     if cmd == '/help':
         for line in helpMsg.splitlines(): plugin.sendDm(line,user)
