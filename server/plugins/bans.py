@@ -56,6 +56,7 @@ def beforeCommand(event,user,cmd):
             plugin.sendMsg('No permission!',user)
             return
         punished = cmd.split("/mute ")[1]
+        if punished == 'console': return
         plugin.sendMsg(f'You have been muted by {user.name}.',punished)
         muteList.add(punished)
         
@@ -65,6 +66,7 @@ def beforeCommand(event,user,cmd):
             plugin.sendMsg('No permission!',user)
             return
         punished = cmd.split("/unmute ")[1]
+        if punished == 'console': return
         plugin.sendMsg(f'You have been unmuted by {user.name}.',punished)
         muteList.remove(punished)
         
@@ -74,6 +76,7 @@ def beforeCommand(event,user,cmd):
             plugin.sendMsg('No permission!',user)
             return
         punished = cmd.split("/ban ")[1]
+        if punished == 'console': return
         plugin.sendMsg(f'You have been banned by {user.name}.',punished)
         plugin.sendMsg(f'{punished} has been banned.',user)
         banList.add(punished)
@@ -87,6 +90,7 @@ def beforeCommand(event,user,cmd):
             return
         plugin.sendMsg(f'{punished} has been unbanned.',user)
         punished = cmd.split("/unban ")[1]
+        if punished == 'console': return
         banList.remove(punished)
     
     if cmd == '/help':
