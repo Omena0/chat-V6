@@ -302,7 +302,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                 if debug: raise e
                 return
 
-User('console',md5('console'),None)
+User('console',md5(b'console'),None)
 
 print('[.] Setting up socket..')
 s = socket.socket()
