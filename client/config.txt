@@ -1,4 +1,3 @@
-
 # Configuration file for the ChatV6 client
 
 # !!! DO NOT CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING !!!
@@ -14,7 +13,9 @@ api_addr = "https://omena0.github.io/api/"
 
 # Custom address for the ChatV6 server
 # Overridden if `fetch_ip` is true.
-ip   = "127.0.0.1"
+
+#ip = "127.0.0.1"
+ip   = "98.166.11.113"
 port = 5000
 
 ############## Login configuration ##############
@@ -22,5 +23,5 @@ port = 5000
 # Whether to send a password during login.
 online_mode = True
 
-# Whether to stone the name and password (hash) so you dont have to type it every time
+# Whether to stone the display_name and password (hash) so you dont have to type it every time
 store_credentials = True

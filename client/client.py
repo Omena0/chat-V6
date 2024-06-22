@@ -6,6 +6,8 @@ import socket
 import os
 import sys
 
+os.system()
+
 try: os.chdir('client')
 except: ...
 

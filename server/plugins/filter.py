@@ -35,7 +35,7 @@ def beforeMessage(event,msg:str,sender:User):
         return
 
     if sender.name not in lastMsg:
-        lastMsg[sender.name] = t.time()
+        lastMsg[sender.name] = t.time() - DELAY
 
     if lastMsg[sender.name] + DELAY > t.time():
         event.cancel = True

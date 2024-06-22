@@ -75,6 +75,7 @@ def beforeCommand(event,user,cmd):
             return
         punished = cmd.split("/ban ")[1]
         plugin.sendMsg(f'You have been banned by {user.name}.',punished)
+        plugin.sendMsg(f'{punished} has been banned.',user)
         banList.add(punished)
         plugin.import_var('client_sockets').remove(plugin.getCS(punished))
         plugin.getCS(punished).close()
@@ -84,8 +85,8 @@ def beforeCommand(event,user,cmd):
         if not has_perm(user,'bans.unban'):
             plugin.sendMsg('No permission!',user)
             return
+        plugin.sendMsg(f'{punished} has been unbanned.',user)
         punished = cmd.split("/unban ")[1]
-        plugin.sendMsg(f'You have been unbanned by {user.name}.',punished)
         banList.remove(punished)
     
     if cmd == '/help':
