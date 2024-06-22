@@ -147,8 +147,6 @@ def handleEvent(event, *args, **kwargs):
             if debug: raise e
     return a
 
-
-
 def load_plugins():
     global plugins
     print('[!] Loading Plugins...')
@@ -304,6 +302,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                 if debug: raise e
                 return
 
+User('console','console',None)
 
 print('[.] Setting up socket..')
 s = socket.socket()

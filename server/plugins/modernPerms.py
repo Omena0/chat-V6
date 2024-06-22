@@ -32,6 +32,8 @@ def has_perm(user,permission:str):
     if isinstance(user,str):
         user = plugin.getUser(user)
     
+    if user.name == 'console': return True
+    
     if user.name not in perms:
         return
 
