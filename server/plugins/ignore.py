@@ -3,7 +3,7 @@ from plugins.pluginParser import Plugin, User
 # Plugin info
 name = 'Ignore Plugin'
 filename = __file__.split('\\')[-1]
-priority = 1
+priority = 10
 
 # Create plugin object
 plugin: Plugin = Plugin(name, filename)
@@ -22,6 +22,7 @@ helpMsg = """
 @plugin.event.beforeMessage
 def beforeMessage(event,msg:str,sender:User):
     event.cancel = True
+    print(f'[{sender.name}] <{sender.display_name}> {msg}')
     for user in plugin.getUsers():
         
         if sender.name in ignorelist[user]:
@@ -44,6 +45,7 @@ def beforeDm(event,sender:User,recipient:User,msg:str):
 @plugin.event.beforeCommand
 def beforeCommand(event,user,cmd):
     if cmd.startswith("/ignore "):
+        event.handled = True
         ignored = cmd.split("/ignore ")[1]
         if ignored not in ignorelist[user]:
             ignorelist[user].append(ignored)
@@ -53,6 +55,7 @@ def beforeCommand(event,user,cmd):
             plugin.sendMsg(f'You will now see messages from {ignored}',user)
             
     if cmd.startswith("/block "):
+        event.handled = True
         blocked = cmd.split("/block ")[1]
         if blocked not in blocklist[user]:
             blocklist[user].append(blocked)
@@ -62,13 +65,15 @@ def beforeCommand(event,user,cmd):
             plugin.sendMsg(f'{blocked} Can now see your messages again.',user)
         
     if cmd == '/help':
+        event.handled = True
         for line in helpMsg.splitlines(): plugin.sendDm(line,user)
 
 
-@plugin.event.onJoin
-def onJoin(event,user):
+@plugin.event.onLogin
+def onLogin(event,user,password):
     if user not in ignorelist.keys():
         ignorelist[user] = []
+
     if user not in blocklist.keys():
         blocklist[user] = []
 

@@ -14,7 +14,8 @@ except: ...
 ip   = '127.0.0.1'
 port = 5000
 
-debug = True
+debug = False
+eventsDebug = False
 
 client_sockets:set[socket.socket] = set()
 
@@ -128,19 +129,23 @@ def getPlugins() -> dict[int, ModuleType]: return plugins
 
 def handleEvent(event, *args, **kwargs):
     global plugins
+    a = None
     for plugin in plugins:
         try:
             plugin:pluginParser.Plugin = plugin.plugin
+            if eventsDebug: print(f'[*] [EventDebug] [{plugin.name}] Handling: {event}')
             callback = getattr(plugin.event,event,None)
 
             event_return = pluginParser.EventReturn(plugin)
             callback(event_return,*args,**kwargs)
-            for i in ["cancel","valid","joinMsg","newname","broadcast","broadcastMessage","msg","name","display_name","recipient","leaveMsg","startMsg","silent"]:
+            for i in ["cancel","valid","joinMsg","newname","broadcast","broadcastMessage","msg","name","display_name","recipient","leaveMsg","startMsg","silent","handled"]:
                 if getattr(event_return,i):
-                    return event_return
+                    if eventsDebug: print(f'[*] [EventDebug] [{plugin.name}] {event} Returned: {i} = {getattr(event_return,i)}')
+                    a = event_return
         except Exception as e:
             print(f'[!] {plugin.name} failed {event} [{e}]')
             if debug: raise e
+    return a
 
 
 
@@ -214,12 +219,6 @@ def csHandler(cs:socket.socket, addr:tuple):
                         client_sockets.remove(cs)
                         with suppress(Exception): cs.close()
                         return
-                    
-                    a:pluginParser.EventReturn = handleEvent('onJoin', user)
-                    if a and a.cancel:
-                        client_sockets.remove(cs)
-                        with suppress(Exception): cs.close()
-                        return
                     if a is None:
                         broadcast(f'{user.name} Logged in.', name='+')
                     elif not a.silent:
@@ -233,7 +232,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                 cs.send('\tINVALID'.encode())
                 continue
 
-            # If request = DONE, dont process any further.
+            # If request = DONE, continue
             if msg[0] == 'DONE': continue
 
             elif msg[0] == 'SET_USER':
@@ -256,7 +255,7 @@ def csHandler(cs:socket.socket, addr:tuple):
             elif msg[0] == 'SEND_MESSAGE':
                 if msg[3] == '': continue # Drop empty messages
                 a:pluginParser.EventReturn = handleEvent('beforeMessage', msg[3], user)
-                if a is None or a.msg is None:
+                if a is None or (a.msg is None and not a.cancel):
                     broadcast(msg[3], name=user.display_name, display_name=user.name)
                 elif a.cancel: continue
                 else:
@@ -266,7 +265,11 @@ def csHandler(cs:socket.socket, addr:tuple):
                 continue
 
             elif msg[0] == 'SEND_COMMAND':
-                handleEvent('beforeCommand', user, msg[3]) # command event doesn't return anything
+                print(f'[CMD] [{user.name}] <{user.display_name}> {msg[3]}')
+                a:pluginParser.EventReturn = handleEvent('beforeCommand', user, msg[3])
+                if not a or not a.handled:
+                    sendMsg('Invalid Command', user)
+                    print('[!] Invalid Command')
 
             elif msg[0] == 'SEND_DM':
                 if not findUser(msg[3]):

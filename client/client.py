@@ -138,6 +138,8 @@ if msg == 'INVALID_PSW':
 
 elif msg == '<NO TOKEN>':
     print('[!] Server did not return a token! Is the server in offline mode?')
+    print('[.] Continuing anyways...')
+    token = msg
 
 else:
     token = msg
@@ -181,9 +183,9 @@ def handlePacket(msg):
 
     elif msg[0] == 'DISPLAY':
         if msg[1].startswith(f'[{name}] '): print(f'\r\x1b[1A\r',end='')
-        
+
         print(f'\r{msg[1]}{" "*50}\n[{name}] <{display_name}> ',end='')
-        
+
 
 
 print('[!] All done!\n')
@@ -197,7 +199,7 @@ while True:
         print(f'[{name}] <{display_name}> ',end='')
         continue
 
-    if msg.startswith('/'): # Command Handling (clientside)
+    if msg.startswith('/'): # Command Handling
         # Client
         if msg.startswith('/nick'):
             s.send(f'SET_USER|{name}|{token}|{msg.replace("/nick","").strip()}'.encode())
@@ -218,6 +220,7 @@ while True:
             s.send(f'SEND_COMMAND|{name}|{token}|{msg}'.encode())
 
     else:
+        msg = msg.removeprefix('\\')
         s.send(f'SEND_MESSAGE|{name}|{token}|{msg}'.encode())
     
     

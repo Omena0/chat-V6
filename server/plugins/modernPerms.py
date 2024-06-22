@@ -1,7 +1,7 @@
 from plugins.pluginParser import Plugin, User
 
 # Plugin info
-name = 'Permissions Plugin'
+name = 'ModernPerms'
 filename = __file__.split('\\')[-1]
 priority = 5
 
@@ -29,7 +29,6 @@ def has_perm(user,permission:str):
     """Will be None if no permission is set.
         Otherwise bool
     """
-    print(permission,end=': ')
     if isinstance(user,str):
         user = plugin.getUser(user)
     
@@ -57,8 +56,8 @@ def onPluginLoad(event):
     plugin.export_var({'has_perm':has_perm})
     plugin.export_var({'perms':perms})
 
-@plugin.event.onJoin
-def onJoin(event, user):
+@plugin.event.onLogin
+def onLogin(event, user, psw):
     if user.name not in perms.keys():
         perms[user.name] = {}
     else:
@@ -67,15 +66,16 @@ def onJoin(event, user):
 @plugin.event.beforeCommand
 def beforeCommand(event,user,cmd):
     if cmd.startswith('/perm '):
+        event.handled = True
         cmd = cmd.split('/perm ')[1]
         if cmd.startswith('set '):
-            user = cmd.split(' ')[1]
+            user_ = cmd.split(' ')[1]
             perm = cmd.split(' ')[2]
-            value = cmd.split(' ')[3]
-            update_perm(user,{perm:value})
-            plugin.sendMsg()
+            value = cmd.split(' ')[3].lower() == 'true'
+            update_perm(user_,{perm:value})
+            plugin.sendMsg(f'Updated permissions for {user_}.',user)
     
     
     if cmd == '/help':
-        for line in helpMsg.splitlines(): plugin.sendDm(line,user)
+        for line in helpMsg.splitlines(): plugin.sendDm(line,user_)
 

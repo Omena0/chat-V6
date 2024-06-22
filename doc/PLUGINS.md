@@ -58,7 +58,6 @@ AfterEvent run after the event already happenned and cannot be cancelled.
 <details open>
 <summary>Click to contract</summary>
 
-    onJoin
     onLeave
     onLogin
     onServerStart

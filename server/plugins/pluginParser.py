@@ -28,7 +28,7 @@ class User:
     def __repr__(self) -> str:
         return self.name
 
-class Dummy:...
+class Dummy: ...
 
 class Plugin:
     def __init__(self,display_name,filename):
@@ -76,7 +76,8 @@ class EventReturn:
             recipient:str        = None,
             leaveMsg:str         = None,
             startMsg:str         = None,
-            silent:bool          = False
+            silent:bool          = False,
+            handled:bool         = False
         ):
         
         self.plugin = plugin
@@ -95,6 +96,7 @@ class EventReturn:
         self.leaveMsg:str         = leaveMsg
         self.startMsg:str         = startMsg
         self.silent:bool          = silent
+        self.handled              = handled
 
 class Event:
     def __init__(self): ...
@@ -126,7 +128,7 @@ class Event:
         """BeforeCommandEvent
         
         Params: user, command
-        Return: None
+        Return: handled
         """
         if not args:
             self.beforeCommand = func
@@ -138,14 +140,6 @@ class Event:
         """
         if not args:
             self.onLogin = func
-    def onJoin(self,func,*args,**__):
-        """OnJoinEvent
-        
-        Params: user
-        Return: cancel, silent, joinMsg
-        """
-        if not args:
-            self.onJoin = func
     def onLeave(self,func,*args,**__):
         """OnLeaveEvent
         

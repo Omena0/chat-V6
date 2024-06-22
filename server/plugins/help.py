@@ -15,5 +15,6 @@ helpHeader = '--- Help ---'
 @plugin.event.beforeCommand
 def command(event,user,command):
     if command == '/help':
+        event.handled = True
         plugin.sendDm(helpHeader,user)
 
