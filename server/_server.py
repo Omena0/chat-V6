@@ -239,12 +239,14 @@ def csHandler(cs:socket.socket, addr:tuple):
             elif msg[0] == 'SET_USER':
                 a:pluginParser.EventReturn = handleEvent('beforeNick', user.display_name, msg[3])
                 if a is not None:
+                    if not a.newname: a.newname = msg[3]
+                    
                     if a.cancel:
                         cs.send(f'\tSET_NAME|{user.name}'.encode())
                         continue
-                    cs.send(f'\tSET_NAME|{a.newdisplay_name}'.encode())
+                    cs.send(f'\tSET_NAME|{a.newname}'.encode())
                     if a.broadcast: broadcast(f'{a.broadcastMessage}', name='!')
-                    user.display_name = a.newdisplay_name
+                    user.display_name = a.newname
                 else:
                     cs.send(f'\tSET_NAME|{msg[3]}'.encode())
                     broadcast(f'{user.name} Changed their display name. {user.display_name} -> {msg[3]}', name='!')
@@ -258,11 +260,13 @@ def csHandler(cs:socket.socket, addr:tuple):
                     broadcast(msg[3], name=user.display_name, display_name=user.name)
                 elif a.cancel: continue
                 else:
+                    if not a.display_name: a.display_name = user.display_name
+                    if not a.name: a.name = user.name
                     broadcast(a.msg, name=a.display_name, display_name=a.name)
                 continue
 
             elif msg[0] == 'SEND_COMMAND':
-                handleEvent('beforeCommand', user, msg[3]) # command event doesn't return anything so no point storing it
+                handleEvent('beforeCommand', user, msg[3]) # command event doesn't return anything
 
             elif msg[0] == 'SEND_DM':
                 if not findUser(msg[3]):
@@ -273,6 +277,10 @@ def csHandler(cs:socket.socket, addr:tuple):
                     sendDm(msg[4], msg[3], name=user.display_name, display_name=user.name)
                 elif a.cancel == True: continue
                 else:
+                    if not a.recipient: a.recipient = findUser(msg[3])
+                    if not a.name: a.name = user.name
+                    if not a.display_name: a.display_name = user.display_name
+                    if not a.msg: a.msg = msg[4]
                     sendDm(a.msg, a.recipient, name=a.name, display_name=a.display_name)
 
         except Exception as e:

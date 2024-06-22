@@ -21,7 +21,6 @@ View source for docstrings
     sendMsg    - send a `DISPLAY` request to client & format as message
     sendDm     - same as sendMsg but format as private
 
-    --- Might not work as expected --- (load order & priority sensitive)
     export_var - Export a dict containing variables
     import_var - Get the value of a variable
 
