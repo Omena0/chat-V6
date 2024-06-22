@@ -199,7 +199,6 @@ def csHandler(cs:socket.socket, addr:tuple):
                     print(f'[.] Creating new account: {msg[1]} [{addr[1]}]')
                     User(msg[1],msg[2],cs)
                 user = findUser(msg[1])
-                print(user.password,msg[2])
                 valid = user.password == msg[2]
                 
                 if not valid:
@@ -303,7 +302,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                 if debug: raise e
                 return
 
-User('console',md5(b'console'),None)
+User('console',md5(b'console').hexdigest(),None)
 
 print('[.] Setting up socket..')
 s = socket.socket()
