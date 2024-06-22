@@ -21,9 +21,9 @@ client_sockets:set[socket.socket] = set()
 print('[.] Initializing...')
 
 class User:
-    def __init__(self, display_name, psw, cs):
-        self.name:str         = display_name         # Unique Identifier
-        self.display_name:str     = self.name    # Customisable display display_name
+    def __init__(self, name, psw, cs):
+        self.name:str         = name         # Unique Identifier
+        self.display_name:str = name         # Customisable display name
         self.password:str     = psw          # Hashed password
         self.token:str        = self.genToken()
         self.cs:socket.socket = cs
@@ -40,9 +40,9 @@ class User:
     
 users:set[User] = set()
 
-def findUser(display_name) -> User:
-    if isinstance(display_name,User): return display_name in users
-    with suppress(IndexError): return [user for user in users if user.name == display_name][0]
+def findUser(name) -> User:
+    if isinstance(name,User): return name in users
+    with suppress(IndexError): return [user for user in users if user.name == name][0]
 
 def broadcast(msg:str, name='SYSTEM', display_name='SYSTEM') -> None:
     print(f'[{display_name}] <{name}> {msg}')
@@ -72,7 +72,7 @@ def sendMsg(msg:str,recipient:str|User, user:str|User=None,name:str=None, displa
     if name is None: name = user.display_name
     if display_name is None: display_name = user.name
     
-    user.cs.send(f'\tDISPLAY|[{display_name}] <{name}> {msg}'.encode())
+    recipient.cs.send(f'\tDISPLAY|[{display_name}] <{name}> {msg}'.encode())
 
 def sendDm(msg:str, recipient:str|User, user:str|User=None, name=None, display_name=None):
     """Sends a private message to someone.
@@ -140,6 +140,7 @@ def handleEvent(event, *args, **kwargs):
                     return event_return
         except Exception as e:
             print(f'[!] {plugin.name} failed {event} [{e}]')
+            if debug: raise e
 
 
 
@@ -183,7 +184,7 @@ def load_plugins():
 
 load_plugins()
 
-def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
+def csHandler(cs:socket.socket, addr:tuple):
     user = None
     while True:
         try:
@@ -273,9 +274,11 @@ def csHandler(cs:socket.socket, addr:tuple):  # sourcery skip: low-code-quality
                 elif a.cancel == True: continue
                 else:
                     sendDm(a.msg, a.recipient, name=a.name, display_name=a.display_name)
+
         except Exception as e:
             if debug:
                 print(e)
+
             try:client_sockets.remove(cs)
             except: ...
             cs.close()

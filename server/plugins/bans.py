@@ -36,14 +36,14 @@ def onPluginLoad(event,*_):
 @plugin.event.beforeMessage
 def beforeMessage(event,msg:str,sender:User):
     if sender.name in muteList:
-        plugin.sendMsg('You have been muted.',sender)
+        plugin.sendMsg('You are muted.',sender)
         event.cancel = True
 
 
 @plugin.event.beforeDm
 def beforeDm(event,sender:User,recipient:User,msg:str):
     if sender.name in muteList:
-        plugin.sendMsg('You have been muted.',sender)
+        plugin.sendMsg('You are muted.',sender)
         event.cancel = True
 
 
