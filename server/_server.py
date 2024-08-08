@@ -1,12 +1,12 @@
-import socket
-from threading import Thread
+import plugins.pluginParser as pluginParser
+from contextlib import suppress
 from random import randrange
+from threading import Thread
+from types import ModuleType
 from hashlib import md5
 import time as t
+import socket
 import os
-import plugins.pluginParser as pluginParser
-from types import ModuleType
-from contextlib import suppress
 
 try: os.chdir('server')
 except: ...
@@ -23,15 +23,15 @@ print('[.] Initializing...')
 
 class User:
     def __init__(self, name, psw, cs):
-        self.name:str         = name         # Unique Identifier
-        self.display_name:str = name         # Customisable display name
-        self.password:str     = psw          # Hashed password
+        self.name:str         = name                          # Unique Identifier
+        self.display_name:str = name                          # Customisable display name
+        self.password:str     = md5(psw.encode()).hexdigest() # Hashed password
         self.token:str        = self.genToken()
         self.cs:socket.socket = cs
         users.add(self)
 
     def genToken(self):
-        return md5(f'{self.name}|{self.display_name}|{randrange(-32767,32767)}'.encode()).hexdigest()
+        return md5(f'{self.name}|{self.display_name}|{randrange(-32767,32767)}|{t.time()}'.encode()).hexdigest()
 
     def __str__(self) -> str:
         return self.name
@@ -191,7 +191,10 @@ def csHandler(cs:socket.socket, addr:tuple):
     user = None
     while True:
         try:
+            a = t.time()
             msg = cs.recv(2048).decode().split('|')
+            if t.time() - a < 0.2:
+                cs.send('\tRATELIMIT'.encode())
             if not msg: raise ValueError('Recieved nothing')
             
             if msg[0] == 'LOGIN':
@@ -199,7 +202,7 @@ def csHandler(cs:socket.socket, addr:tuple):
                     print(f'[.] Creating new account: {msg[1]} [{addr[1]}]')
                     User(msg[1],msg[2],cs)
                 user = findUser(msg[1])
-                valid = user.password == msg[2]
+                valid = user.password == md5(msg[2].encode()).hexdigest()
                 
                 if not valid:
                     cs.send('\tINVALID_PSW'.encode())
@@ -302,7 +305,9 @@ def csHandler(cs:socket.socket, addr:tuple):
                 if debug: raise e
                 return
 
-User('console',md5(b'console').hexdigest(),None)
+psw = str(randrange(0,999999999999999))
+print(f'[!] Console user password is: {psw}')
+User('console',md5(psw.encode()).hexdigest(),None)
 
 print('[.] Setting up socket..')
 s = socket.socket()

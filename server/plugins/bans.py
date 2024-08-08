@@ -75,6 +75,7 @@ def beforeCommand(event,user,cmd):
         if not has_perm(user,'bans.ban'):
             plugin.sendMsg('No permission!',user)
             return
+
         punished = cmd.split("/ban ")[1]
         if punished == 'console': return
         plugin.sendMsg(f'You have been banned by {user.name}.',punished)

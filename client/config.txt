@@ -14,8 +14,7 @@ api_addr = "https://omena0.github.io/api/"
 # Custom address for the ChatV6 server
 # Overridden if `fetch_ip` is true.
 
-#ip = "127.0.0.1"
-ip   = "98.166.11.113"
+ip = "127.0.0.1"
 port = 5000
 
 ############## Login configuration ##############

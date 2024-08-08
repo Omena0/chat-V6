@@ -115,6 +115,10 @@ else:
     if online_mode: psw = md5(input('Password: ').encode()).hexdigest()
 display_name = name
 
+if name == 'console':
+    psw = md5(input('Console Password: ').encode()).hexdigest()
+
+
 # Connect
 print(f'[.] Connecting to {ip}:{port}')
 
@@ -179,6 +183,9 @@ def handlePacket(msg):
     elif msg[0] == 'NOT_IMPLEMENTED': # NotImplementedError
         print('[!] Feature Not Implemented!')
         print(f'[{name}] <{display_name}> ',end='')
+    
+    elif msg[0] == 'RATELIMIT':
+        print('[!] Slow down!')
 
     elif msg[0] == 'SET_NAME':
         display_name = msg[1]
